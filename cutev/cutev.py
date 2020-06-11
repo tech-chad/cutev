@@ -19,7 +19,12 @@ def load_file(filename: str) -> str:
         return data
 
 
+def setup_curses_colors() -> None:
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
+
+
 def curses_main(screen, file_data: str, filename: str) -> None:
+    setup_curses_colors()
     curses.curs_set(0)  # Set the cursor to off.
     line_data = file_data.splitlines()
 
@@ -30,7 +35,7 @@ def curses_main(screen, file_data: str, filename: str) -> None:
         part_data = line_data[line_modifier:line_modifier + screen_height]
 
         screen.clear()
-        screen.addstr(0, 0, header)
+        screen.addstr(0, 0, header, curses.color_pair(1))
         # screen.addstr(1, 0, file_data)
         # part_data = line_data[line_modifier:line_modifier + screen_height]
         for i, line in enumerate(part_data, start=1):
@@ -49,11 +54,11 @@ def curses_main(screen, file_data: str, filename: str) -> None:
             if line_modifier > 0:
                 line_modifier -= 1
         elif ch == curses.KEY_NPAGE:
-            line_modifier += screen_height + 2
+            line_modifier += screen_height - 4
             if line_modifier >= len(line_data) - screen_height + 2:
-                line_modifier = len(line_data) - screen_height + 2
+                line_modifier = len(line_data) - screen_height + 3
         elif ch == curses.KEY_PPAGE:
-            line_modifier -= screen_height + 2
+            line_modifier -= screen_height - 4
             if line_modifier <= 0:
                 line_modifier = 0
 
