@@ -48,6 +48,14 @@ def curses_main(screen, file_data: str, filename: str) -> None:
         elif ch == curses.KEY_UP:
             if line_modifier > 0:
                 line_modifier -= 1
+        elif ch == curses.KEY_NPAGE:
+            line_modifier += screen_height + 2
+            if line_modifier >= len(line_data) - screen_height + 2:
+                line_modifier = len(line_data) - screen_height + 2
+        elif ch == curses.KEY_PPAGE:
+            line_modifier -= screen_height + 2
+            if line_modifier <= 0:
+                line_modifier = 0
 
 
 def main() -> int:
