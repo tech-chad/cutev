@@ -70,7 +70,10 @@ def curses_main(screen, file_data: str, filename: str) -> None:
         for i, line in enumerate(part_data, start=1):
             if i >= screen_height - 2:
                 break
-            screen.addstr(i, 0, line)
+            if len(line) >= screen_width:
+                screen.addstr(i, 0, line[:screen_width - 1] + "$")
+            else:
+                screen.addstr(i, 0, line)
 
         screen.refresh()
         ch = screen.getch()
