@@ -9,6 +9,34 @@ def setup_header(filename: str, width: int) -> str:
     return f"{' ' * left_padding}{filename}{' ' * right_padding}"
 
 
+def goto_prompt(screen, prompt_string: str, width: int, length: int) -> str:
+    curses.curs_set(1)
+    padding = width - len(prompt_string) - 1
+    cursor_loc = (length - 1, len(prompt_string))
+    p = f"{prompt_string}{' ' * padding}"
+    screen.addstr(length - 1, 0, p, curses.color_pair(2))
+    screen.move(*cursor_loc)
+    user_input = ""
+    while True:
+        u = screen.getch()
+        str_u = chr(u)
+        if u == curses.KEY_ENTER or u == 10:
+            break
+        elif u == curses.KEY_BACKSPACE and len(user_input) > 0:
+            y, x = screen.getyx()
+            screen.move(y, x - 1)
+            screen.addch(" ", curses.color_pair(2))
+            screen.move(y, x - 1)
+            user_input = user_input[:-1]
+
+        elif str_u.isdigit():
+            user_input += str_u
+            screen.addch(str_u, curses.color_pair(2))
+    curses.curs_set(0)
+
+    return user_input
+
+
 def load_file(filename: str) -> str:
     try:
         with open(filename) as f:
@@ -21,6 +49,7 @@ def load_file(filename: str) -> str:
 
 def setup_curses_colors() -> None:
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_GREEN)
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 
 def curses_main(screen, file_data: str, filename: str) -> None:
@@ -61,6 +90,10 @@ def curses_main(screen, file_data: str, filename: str) -> None:
             line_modifier -= screen_height - 4
             if line_modifier <= 0:
                 line_modifier = 0
+        elif ch == 103:  # g
+            line_num = goto_prompt(screen, "Go to line: ", screen_width, screen_height)
+            if line_num.isdigit() and int(line_num) < len(line_data):
+                line_modifier = int(line_num) - 1
 
 
 def main() -> int:
