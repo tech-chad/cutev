@@ -27,7 +27,7 @@ def sample_file_small():
 
 def sample_file_medium():
     # returns contents of a sample file as a string
-    data = ["# sample python 3 file\n",
+    data = ["# sample python 3 medium file\n",
             "\n",
             "\n",
             "def main():\n",
@@ -46,10 +46,18 @@ def sample_file_medium():
     return "".join(data)
 
 
-def test_setup_header():
+def test_setup_header_single_file():
     pad = " " * 37
     expected_result = pad + "foo.py" + pad
-    result = cutev.setup_header("foo.py", 80)
+    result = cutev.setup_header("foo.py", 0, 1, 80)
+    assert result == expected_result
+
+
+def test_setup_header_multiple_files():
+    pad_r = " " * 33
+    pad_l = " " * 34
+    expected_result = pad_r + "foo.py  1 / 2" + pad_l
+    result = cutev.setup_header("foo.py", 0, 2, 80)
     assert result == expected_result
 
 
@@ -125,7 +133,7 @@ def test_cutev_page_down_and_up(tmpdir):
         captured = h.screenshot()
         assert "print('hello world')" in captured
         assert "print(f'{x} + 1 = {x + 1}')" in captured
-        assert "# sample python 3 file" not in captured
+        assert "# sample python 3 medium file" not in captured
         h.write("q")
         h.await_exit()
 
@@ -137,7 +145,7 @@ def test_cutev_goto_line_prompt(tmpdir):
     tf.write(data)
     with Runner(*run_cutev(tf.strpath), height=11) as h:
         h.await_text("foo.py")
-        h.await_text("# sample python 3 file")
+        h.await_text("# sample python 3 medium file")
         h.write("g")
         h.await_text("Go to line:")
         h.write("z")
@@ -151,7 +159,7 @@ def test_cutev_goto_line(tmpdir):
     tf.write(data)
     with Runner(*run_cutev(tf.strpath), height=11) as h:
         h.await_text("foo.py")
-        h.await_text("# sample python 3 file")
+        h.await_text("# sample python 3 medium file")
         h.write("g")
         h.await_text("Go to line:")
         h.write("6")
@@ -167,7 +175,7 @@ def test_cutev_goto_line_no_exist(tmpdir):
     tf.write(data)
     with Runner(*run_cutev(tf.strpath), height=11) as h:
         h.await_text("foo.py")
-        h.await_text("# sample python 3 file")
+        h.await_text("# sample python 3 medium file")
         captured = h.screenshot()
         c = captured.splitlines()[1]
         h.write("g")
@@ -184,7 +192,7 @@ def test_cutev_goto_line_backspace(tmpdir):
     tf.write(data)
     with Runner(*run_cutev(tf.strpath), height=11) as h:
         h.await_text("foo.py")
-        h.await_text("# sample python 3 file")
+        h.await_text("# sample python 3 medium file")
         h.write("g")
         h.await_text("Go to line:")
         h.write("5")
@@ -202,7 +210,7 @@ def test_cutev_file_not_found(tmpdir):
         h.press("Enter")
         h.write(f"python3 cutev/cutev.py {tf.strpath}")
         h.press("Enter")
-        h.await_text("Error file not found")
+        h.await_text("No files loaded")
 
 
 def test_cutev_no_filename_passed():
@@ -224,5 +232,112 @@ def test_cutev_line_off_screen(tmpdir):
         captured = h.screenshot()
         expected = "a" * 79 + "$"
         assert captured.splitlines()[1] == expected
+
+
+def test_cutev_single_file(tmpdir):
+    tf = tmpdir.join("foo.py")
+    tf.write(sample_file_small())
+    with Runner(*run_cutev(tf.strpath)) as h:
+        h.await_text("foo.py")
+
+
+def test_cutev_multiple_files_quit(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath)) as h:
+        h.await_text("foo.py  1 / 2")
+        h.write("q")
+        h.press("Enter")
+        h.await_exit()
+
+
+def test_cutev_multiple_files_open(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath)) as h:
+        h.await_text("foo.py  1 / 2")
+        h.await_text("# sample python 3 file")
+
+
+def test_cutev_multiple_files_open_one_not_found(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf3 = tmpdir.join("a")
+    tf3.write("test test test")
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath, tf3.strpath)) as h:
+        h.await_text("foo.py  1 / 2")
+
+
+def test_cutev_multiple_files_switching_forward(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    tf3 = tmpdir.join("a")
+    tf3.write("test test test")
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath, tf3.strpath)) as h:
+        h.await_text("foo.py  1 / 3")
+        h.press("^n")
+        h.await_text("bar.py  2 / 3")
+        h.await_text("# sample python 3 medium file")
+        h.press("^n")
+        h.await_text("a  3 / 3")
+        h.await_text("test test test")
+        h.press("^n")
+        h.await_text("foo.py  1 / 3")
+        h.await_text("# sample python 3 file")
+
+
+def test_cutev_multiple_files_switching_backward(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    tf3 = tmpdir.join("a")
+    tf3.write("test test test")
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath, tf3.strpath)) as h:
+        h.await_text("foo.py  1 / 3")
+        h.press("^b")
+        h.await_text("a  3 / 3")
+        h.await_text("test test test")
+        h.press("^b")
+        h.await_text("bar.py  2 / 3")
+        h.await_text("# sample python 3 medium file")
+        h.press("^b")
+        h.await_text("foo.py  1 / 3")
+        h.await_text("# sample python 3 file")
+
+
+def test_cutev_ctrl_x_close_single_file(tmpdir):
+    tf = tmpdir.join("a.txt")
+    tf.write("test test test")
+    with Runner(*run_cutev(tf.strpath)) as h:
+        h.await_text("a.txt")
+        h.press("^x")
+        h.await_exit()
+
+
+def test_cutev_ctrl_x_close_multiple_files(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    tf3 = tmpdir.join("a")
+    tf3.write("test test test")
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath, tf3.strpath)) as h:
+        h.await_text("foo.py  1 / 3")
+        h.press("^x")
+        h.await_text("bar.py  1 / 2")
+        h.await_text("# sample python 3 medium file")
+        h.press("^x")
+        h.await_text("a")
+        h.await_text("test test test")
+        h.press("^x")
+        h.await_exit()
 
 
