@@ -133,6 +133,16 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
             file_data.pop(close_num)
             filename.pop(close_num)
             line_data = file_data[current_file].splitlines()
+        elif ch == 1:  # ctrl-a
+            if total_files > 1:
+                current_file_data = file_data[current_file]
+                current_file_name = filename[current_file]
+                file_data.clear()
+                filename.clear()
+                file_data.append(current_file_data)
+                filename.append(current_file_name)
+                current_file = 0
+                total_files = 1
 
 
 def main() -> int:

@@ -341,3 +341,30 @@ def test_cutev_ctrl_x_close_multiple_files(tmpdir):
         h.await_exit()
 
 
+def test_cutev_ctrl_a_close_all_except_current(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    tf2 = tmpdir.join("bar.py")
+    tf2.write(sample_file_medium())
+    tf3 = tmpdir.join("a")
+    tf3.write("test test test")
+    with Runner(*run_cutev(tf1.strpath, tf2.strpath, tf3.strpath)) as h:
+        h.await_text("foo.py  1 / 3")
+        h.await_text("# sample python 3 file")
+        h.press("^a")
+        h.await_text("foo.py")
+        captured = h.screenshot()
+        assert "foo.py  1 / 3" not in captured
+        h.await_text("foo.py")
+        h.await_text("# sample python 3 file")
+
+
+def test_cutev_ctrl_a_close_all_except_current_only_one_open(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    with Runner(*run_cutev(tf1.strpath)) as h:
+        h.await_text("foo.py")
+        h.await_text("# sample python 3 file")
+        h.press("^a")
+        h.await_text("foo.py")
+        h.await_text("# sample python 3 file")
