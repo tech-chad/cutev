@@ -1,2 +1,6 @@
 /venv/
 cutev.egg-info
+build
+dist
+.idea
+.pytest_cache
