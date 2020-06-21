@@ -14,6 +14,8 @@ positional arguments:
 - ```q``` to quit
 - ```Arrow Up``` move one line up
 - ```Arrow Down``` move one line down
+- ```Arrow Right``` scroll right if line is wider than screen
+- ```Arrow Left``` scroll left
 - ```Page Up``` move one page up
 - ```Page Down``` move one page down
 - ```g``` Enter line number to go to
