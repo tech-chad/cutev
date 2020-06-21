@@ -69,6 +69,9 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
     line_data = file_data[current_file].splitlines()
 
     line_modifier = 0
+    column_modifier = 0
+    max_column_modifier = 0
+    longest_line = 0
     while True:
         screen_height, screen_width = screen.getmaxyx()
         header = setup_header(filename[current_file],
@@ -84,10 +87,14 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
         for i, line in enumerate(part_data, start=1):
             if i >= screen_height - 2:
                 break
-            if len(line) >= screen_width:
-                screen.addstr(i, 0, line[:screen_width - 1] + "$")
+            if len(line) > screen_width + column_modifier:
+                if len(line) > longest_line:
+                    longest_line = len(line)
+                    max_column_modifier = longest_line - screen_width
+                index_to = screen_width - 1 + column_modifier
+                screen.addstr(i, 0, line[column_modifier:index_to] + "$")
             else:
-                screen.addstr(i, 0, line)
+                screen.addstr(i, 0, line[column_modifier:])
 
         screen.refresh()
         ch = screen.getch()
@@ -99,6 +106,12 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
         elif ch == curses.KEY_UP:
             if line_modifier > 0:
                 line_modifier -= 1
+        elif ch == curses.KEY_RIGHT:
+            if column_modifier < max_column_modifier:
+                column_modifier += 1
+        elif ch == curses.KEY_LEFT:
+            if column_modifier > 0:
+                column_modifier -= 1
         elif ch == curses.KEY_NPAGE:
             line_modifier += screen_height - 4
             if line_modifier >= len(line_data) - screen_height + 2:

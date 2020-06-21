@@ -368,3 +368,39 @@ def test_cutev_ctrl_a_close_all_except_current_only_one_open(tmpdir):
         h.press("^a")
         h.await_text("foo.py")
         h.await_text("# sample python 3 file")
+
+
+def test_cutev_no_scroll_right_left_small_file(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    with Runner(*run_cutev(tf1.strpath), width=25) as h:
+        h.await_text("foo.py")
+        h.await_text("# sample python 3 file")
+        h.await_text("    print('hello world')")
+        h.press("Right")
+        h.press("Right")
+        captured = h.screenshot()
+        assert "print('hello world')" in captured
+        h.press("Left")
+        h.press("left")
+        captured = h.screenshot()
+        assert "print('hello world')" in captured
+        assert "# sample python 3 file" in captured
+
+
+def test_cutev_scroll_left_right_long_line(tmpdir):
+    tf = tmpdir.join("foo.txt")
+    data = "a" * 24 + "bcd"
+    tf.write(data)
+    with Runner(*run_cutev(tf.strpath), width=25) as h:
+        h.await_text("a" * 24 + "$")
+        h.press("Right")
+        h.await_text("a" * 23 + "b$")
+        h.press("Right")
+        h.await_text("a" * 22 + "bcd")
+        h.press("Right")
+        h.await_text("a" * 22 + "bcd")
+        h.press("Left")
+        h.await_text("a" * 23 + "b$")
+        h.press("Left")
+        h.await_text("a" * 24 + "$")
