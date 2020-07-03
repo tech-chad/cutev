@@ -162,11 +162,26 @@ def test_cutev_goto_line(tmpdir):
         h.await_text("# sample python 3 medium file")
         h.write("g")
         h.await_text("Go to line:")
-        h.write("6")
+        h.write("13")
         h.press("Enter")
         captured = h.screenshot()
         c = captured.splitlines()[1]
-        assert "for x in range(10):" in c
+        assert "if __name__ == '__main__':" in c
+
+
+def test_cutev_goto_line_already_on_screen(tmpdir):
+    tf = tmpdir.join("foo.py")
+    tf.write(sample_file_medium())
+    with Runner(*run_cutev(tf.strpath), height=20) as h:
+        h.await_text("foo.py")
+        captured = h.screenshot()
+        c = captured.splitlines()[1]
+        h.write("g")
+        h.await_text("Go to line:")
+        h.write("6")
+        h.press("Enter")
+        captured = h.screenshot()
+        assert captured.splitlines()[1] == c
 
 
 def test_cutev_goto_line_no_exist(tmpdir):

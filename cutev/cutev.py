@@ -121,9 +121,14 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
             if line_modifier <= 0:
                 line_modifier = 0
         elif ch == 103:  # g
-            line_num = goto_prompt(screen, "Go to line: ", screen_width, screen_height)
+            line_num = goto_prompt(screen, "Go to line: ",
+                                   screen_width, screen_height)
             if line_num.isdigit() and int(line_num) < len(line_data):
-                line_modifier = int(line_num) - 1
+                line_num = int(line_num) - 1
+                if line_modifier <= line_num <= line_modifier + screen_height:
+                    pass
+                else:
+                    line_modifier = line_num
         elif ch == 14:  # ctrl-n
             if current_file + 1 >= total_files:
                 current_file = 0
