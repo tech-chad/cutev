@@ -184,6 +184,18 @@ def test_cutev_goto_line_already_on_screen(tmpdir):
         assert captured.splitlines()[1] == c
 
 
+def test_cutev_goto_line_zero(tmpdir):
+    tf = tmpdir.join("foo.py")
+    tf.write(sample_file_small())
+    with Runner(*run_cutev(tf.strpath), height=20) as h:
+        h.await_text("foo.py")
+        h.write("g")
+        h.await_text("Go to line:")
+        h.write("0")
+        captured = h.screenshot()
+        assert "Go to line: 0" not in captured
+
+
 def test_cutev_goto_line_no_exist(tmpdir):
     tf = tmpdir.join("foo.py")
     data = sample_file_medium()

@@ -39,6 +39,8 @@ def goto_prompt(screen, prompt_string: str, width: int, length: int) -> str:
             user_input = user_input[:-1]
 
         elif str_u.isdigit():
+            if str_u == '0' and len(user_input) == 0:
+                continue
             user_input += str_u
             screen.addch(str_u, curses.color_pair(2))
     curses.curs_set(0)
