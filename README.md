@@ -19,6 +19,7 @@ positional arguments:
 - ```Page Up``` move one page up
 - ```Page Down``` move one page down
 - ```g``` Enter line number to go to
+- ```l``` Show line numbers
 - ```ctrl-n``` Next open file
 - ```ctrl-b``` Previous open file
 - ```ctrl-x``` Close current open file

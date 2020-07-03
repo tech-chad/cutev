@@ -63,7 +63,10 @@ def setup_curses_colors() -> None:
     curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 
-def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
+def curses_main(screen,
+                file_data: List[str],
+                filename: List[str],
+                line_numbers: bool) -> None:
     setup_curses_colors()
     curses.curs_set(0)  # Set the cursor to off.
     current_file = 0
@@ -72,10 +75,14 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
 
     line_modifier = 0
     column_modifier = 0
-    max_column_modifier = 0
+    max_column_mod = 0
     longest_line = 0
     while True:
         screen_height, screen_width = screen.getmaxyx()
+        if line_numbers:
+            line_num_mod = len(str(len(line_data)))
+        else:
+            line_num_mod = 0
         header = setup_header(filename[current_file],
                               current_file,
                               total_files,
@@ -89,14 +96,19 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
         for i, line in enumerate(part_data, start=1):
             if i >= screen_height - 2:
                 break
-            if len(line) > screen_width + column_modifier:
+            if line_numbers:
+                screen.addstr(i, 0, f"{i + line_modifier: >{line_num_mod}}",
+                              curses.color_pair(2))
+
+            if len(line) > screen_width - line_num_mod + column_modifier:
                 if len(line) > longest_line:
                     longest_line = len(line)
-                    max_column_modifier = longest_line - screen_width
-                index_to = screen_width - 1 + column_modifier
-                screen.addstr(i, 0, line[column_modifier:index_to] + "$")
+                    max_column_mod = longest_line - screen_width + line_num_mod
+                index_to = screen_width - line_num_mod - 1 + column_modifier
+                screen.addstr(i, 0 + line_num_mod,
+                              line[column_modifier:index_to] + "$")
             else:
-                screen.addstr(i, 0, line[column_modifier:])
+                screen.addstr(i, 0 + line_num_mod, line[column_modifier:])
 
         screen.refresh()
         ch = screen.getch()
@@ -109,7 +121,7 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
             if line_modifier > 0:
                 line_modifier -= 1
         elif ch == curses.KEY_RIGHT:
-            if column_modifier < max_column_modifier:
+            if column_modifier < max_column_mod:
                 column_modifier += 1
         elif ch == curses.KEY_LEFT:
             if column_modifier > 0:
@@ -131,6 +143,8 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
                     pass
                 else:
                     line_modifier = line_num
+        elif ch == 108:  # l
+            line_numbers = not line_numbers
         elif ch == 14:  # ctrl-n
             if current_file + 1 >= total_files:
                 current_file = 0
@@ -168,6 +182,8 @@ def curses_main(screen, file_data: List[str], filename: List[str]) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("filename", nargs="+", help="file name(s) to view")
+    parser.add_argument("-l", "--linenumbers", action="store_true",
+                        help="show line numbers")
     args = parser.parse_args()
 
     file_data = []
@@ -183,7 +199,7 @@ def main() -> int:
         print("No files loaded")
         return 1
     else:
-        curses.wrapper(curses_main, file_data, file_names)
+        curses.wrapper(curses_main, file_data, file_names, args.linenumbers)
         return 0
 
 

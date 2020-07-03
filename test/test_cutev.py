@@ -431,3 +431,71 @@ def test_cutev_scroll_left_right_long_line(tmpdir):
         h.await_text("a" * 23 + "b$")
         h.press("Left")
         h.await_text("a" * 24 + "$")
+
+
+def test_cutev_line_number(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    with Runner(*run_cutev(tf1.strpath, "-l"), width=30) as h:
+        h.await_text("foo.py")
+        h.await_text("1")
+        captured = h.screenshot()
+        assert "1# sample python 3 file" in captured
+
+
+def test_cutev_line_number_scroll_down_up(tmpdir):
+    tf = tmpdir.join("foo.py")
+    tf.write(sample_file_medium())
+    with Runner(*run_cutev(tf.strpath, "-l"), width=80, height=11) as h:
+        h.await_text("foo.py")
+        captured = h.screenshot()
+        assert " 8        print('hello world')" in captured
+        h.press("Down")
+        captured = h.screenshot()
+        assert " 9        print(f'{x} + 1 = {x + 1}')" in captured
+        assert " 1# sample python 3 file" not in captured
+        h.press("Down")
+        captured = h.screenshot()
+        assert "10        print('done')" in captured
+        assert " 2\n" not in captured
+        h.press("up")
+        captured = h.screenshot()
+        assert "10        print('done')" not in captured
+        assert " 2\n" in captured
+
+
+def test_cutev_line_numbers_right_left_scroll(tmpdir):
+    tf = tmpdir.join("foo.txt")
+    data = "a" * 24 + "bcd"
+    tf.write(data)
+    with Runner(*run_cutev(tf.strpath, "-l"), width=25) as h:
+        h.await_text("1" + "a" * 23 + "$")
+        h.press("Right")
+        h.await_text("1" + "a" * 23 + "$")
+        h.press("Right")
+        h.await_text("1" + "a" * 22 + "b$")
+        h.press("Right")
+        h.await_text("1" + "a" * 21 + "bcd")
+        h.press("Left")
+        h.await_text("1" + "a" * 22 + "b$")
+        h.press("Left")
+        h.await_text("1" + "a" * 23 + "$")
+
+
+def test_cutev_line_numbers_on_off(tmpdir):
+    tf1 = tmpdir.join("foo.py")
+    tf1.write(sample_file_small())
+    with Runner(*run_cutev(tf1.strpath), width=30) as h:
+        h.await_text("foo.py")
+        captured = h.screenshot()
+        assert "# sample python 3 file" in captured
+        assert "1# sample python 3 file" not in captured
+        h.write("l")
+        captured = h.screenshot()
+        assert "1# sample python 3 file" in captured
+        h.write("l")
+        captured = h.screenshot()
+        assert "1# sample python 3 file" not in captured
+
+
+
