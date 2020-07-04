@@ -169,6 +169,22 @@ def test_cutev_goto_line(tmpdir):
         assert "if __name__ == '__main__':" in c
 
 
+def test_cutev_goto_line_one_off_screen(tmpdir):
+    tf = tmpdir.join("foo.py")
+    data = sample_file_medium()
+    tf.write(data)
+    with Runner(*run_cutev(tf.strpath), height=11) as h:
+        h.await_text("foo.py")
+        h.await_text("# sample python 3 medium file")
+        h.write("g")
+        h.await_text("Go to line:")
+        h.write("9")
+        h.press("Enter")
+        captured = h.screenshot()
+        c = captured.splitlines()[1]
+        assert "        print(f'{x} + 1 = {x + 1}')" in c
+
+
 def test_cutev_goto_line_already_on_screen(tmpdir):
     tf = tmpdir.join("foo.py")
     tf.write(sample_file_medium())

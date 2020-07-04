@@ -141,7 +141,8 @@ def curses_main(screen,
                                    screen_width, screen_height)
             if line_num.isdigit() and int(line_num) < len(line_data):
                 line_num = int(line_num) - 1
-                if line_modifier <= line_num <= line_modifier + screen_height:
+                bottom_mod = line_modifier + screen_height - 3
+                if line_modifier <= line_num < bottom_mod:
                     pass
                 else:
                     line_modifier = line_num
