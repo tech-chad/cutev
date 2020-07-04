@@ -71,7 +71,9 @@ def curses_main(screen,
     curses.curs_set(0)  # Set the cursor to off.
     current_file = 0
     total_files = len(file_data)
-    line_data = file_data[current_file].splitlines()
+    line_data = file_data[current_file].splitlines(keepends=True)
+    if line_data[-1][-1] == "\n":
+        line_data.append("\n")
 
     line_modifier = 0
     column_modifier = 0

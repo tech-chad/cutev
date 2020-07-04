@@ -131,8 +131,8 @@ def test_cutev_page_down_and_up(tmpdir):
         assert "print(f'{x} + 1 = {x + 1}')" not in captured
         h.press("PageDown")
         captured = h.screenshot()
-        assert "print('hello world')" in captured
         assert "print(f'{x} + 1 = {x + 1}')" in captured
+        assert "        print('done')" in captured
         assert "# sample python 3 medium file" not in captured
         h.write("q")
         h.await_exit()
@@ -400,7 +400,7 @@ def test_cutev_ctrl_a_close_all_except_current_only_one_open(tmpdir):
 def test_cutev_no_scroll_right_left_small_file(tmpdir):
     tf1 = tmpdir.join("foo.py")
     tf1.write(sample_file_small())
-    with Runner(*run_cutev(tf1.strpath), width=25) as h:
+    with Runner(*run_cutev(tf1.strpath)) as h:
         h.await_text("foo.py")
         h.await_text("# sample python 3 file")
         h.await_text("    print('hello world')")
@@ -436,7 +436,7 @@ def test_cutev_scroll_left_right_long_line(tmpdir):
 def test_cutev_line_number(tmpdir):
     tf1 = tmpdir.join("foo.py")
     tf1.write(sample_file_small())
-    with Runner(*run_cutev(tf1.strpath, "-l"), width=30) as h:
+    with Runner(*run_cutev(tf1.strpath, "-l")) as h:
         h.await_text("foo.py")
         h.await_text("1")
         captured = h.screenshot()
@@ -485,7 +485,7 @@ def test_cutev_line_numbers_right_left_scroll(tmpdir):
 def test_cutev_line_numbers_on_off(tmpdir):
     tf1 = tmpdir.join("foo.py")
     tf1.write(sample_file_small())
-    with Runner(*run_cutev(tf1.strpath), width=30) as h:
+    with Runner(*run_cutev(tf1.strpath)) as h:
         h.await_text("foo.py")
         captured = h.screenshot()
         assert "# sample python 3 file" in captured
@@ -498,4 +498,21 @@ def test_cutev_line_numbers_on_off(tmpdir):
         assert "1# sample python 3 file" not in captured
 
 
+def test_cutev_last_line_show_blank(tmpdir):
+    tf = tmpdir.join("foo.py")
+    tf.write(sample_file_small())
+    with Runner(*run_cutev(tf.strpath, "-l"), height=13) as h:
+        h.await_text("foo.py")
+        captured = h.screenshot()
+        assert "10" in captured.splitlines()[-3:]
 
+
+def test_cutev_last_line_show_line(tmpdir):
+    tf = tmpdir.join("foo.txt")
+    tf.write("test test test\npost toasties")
+    with Runner(*run_cutev(tf.strpath, "-l")) as h:
+        h.await_text("foo.txt")
+        h.await_text("1test test test")
+        h.await_text("2post toasties")
+        captured = h.screenshot()
+        assert "3" not in captured
