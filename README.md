@@ -4,10 +4,15 @@ command line text viewer using curses
 
 ### Usage:
 ```
-usage: cutev [-h] filename [filename ...]
+usage: cutev [-h] [-l] filename [filename ...]
 
 positional arguments:
-  filename    file name(s) to view
+  filename           file name(s) to view
+
+optional arguments:
+ -h, --help              show this help message and exit
+ -l, --linenumbers  show line numbers
+
 ```
 
 ### Commands:
